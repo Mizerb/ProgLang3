@@ -3,23 +3,23 @@
 
 
 /* Sentence contains a subject and verb phrase */
-%sentence(Phrase1, Phrase2, Dir, Count) :-
-%    subjectPhrase(Phrase1, Body), verbPhrase(Body, Phrase2, Dir, Count).
+sentence(Phrase1, Phrase2, Dir, Count) :-
+    subjectPhrase(Phrase1, Body), verbPhrase(Body, Phrase2,  Dir, Count).
 
 /* Subject Phrase is same for both structures */
-%subjectPhrase([Subject | Phrase2], Phrase2) := subject(Subject).
-%subjectPhrase([Article, Subject | Phrase2], Phrase2) :- article(Article), subject(Subject).
+subjectPhrase([Subject | Phrase2], Phrase2) :- subject(Subject).
+subjectPhrase([Article, Subject | Phrase2], Phrase2) :- article(Article), subject(Subject).
 
-%directionPhrase([Number, Subject, Direction | Phrase2], Phrase2, NumberN, Direction) :- 
-%    num(Number), subject(Subject), direction(Direction), atom_number(Number,NumberN).
+directionPhrase([Number, Subject, Direction | Phrase2], Phrase2, Direction, Number) :- 
+    num(Number), subject(Subject), direction(Direction).
 
 /* Structure 1 */
-%verbPhrase([Verb | Body], Phrase2, Dir, Count) :-
-%    verb(Verb), directionPhrase(Body, Phrase2, Dir, Count).   
+verbPhrase([Verb | Body], Phrase2, Dir, Count) :-
+    verb(Verb), directionPhrase(Body, Phrase2, Dir, Count).   
     
 /* Structure 2 */
-%verbPhrase([Verb | Body], Phrase2, buttonpush, -1) :-
-%    verb(Verb), subjectPhrase(Body, Phrase2).
+verbPhrase([Verb | Body], Phrase2, _, '-1') :-
+    verb(Verb), subjectPhrase(Body, Phrase2).
 
 
 %%%%%%%%%
@@ -43,35 +43,6 @@ verbPhrase([Verb | Body], Phrase2) :-
 verbPhrase([Verb | Body], Phrase2) :-
     verb(Verb), subjectPhrase(Body, Phrase2).
 
-%article("the").
-%article("a").
-%subject("rat").
-%subject("rodent").
-%subject("einstein").
-%subject("it").
-%subject("he").
-%subject("button").
-%subject("square").
-%subject("squares").
-%subject("cell").
-%subject("cells").
-%verb("ran").
-%verb("moved").
-%verb("pushed").
-%verb("scurried").
-%direction("up").
-%direction("down").
-%direction("left").
-%direction("right").
-%num("1").
-%num("2").
-%num("3").
-%num("4").
-%num("5").
-%num("6").
-%num("7").
-%num("8").
-%num("9").
 
 article(the).
 article(a).
@@ -103,8 +74,6 @@ num('7').
 num('8').
 num('9').
 
-%isSentence(X) :- sentence(X,_,_, [ ]).
-isSentence(X) :- sentence(X, [ ]).
 
 
 main :-
@@ -116,17 +85,10 @@ main :-
     /*write(Words), nl,*/
     start(X,Y),
     %inSent(Words).
-    testSentences(Words, [X,Y]).
+    open("NL-parse-solution", write, File),
+    testSentences(Words, [X,Y], File),
+    close(File).
 
-
-inSent( [Wordz| _ ] ):-
-    sentToAtom(Wordz, Att),
-    isSentence(Att),
-    write("HUZZA"),nl,!.
-inSent( [Wordz| _ ] ):-
-    sentToAtom(Wordz, Att),
-    \+isSentence(Att),
-    write("FUCK"),nl,!.
 
 sentToAtom([] , [] ) :- !.
 sentToAtom([SS | N] , [AS | AN]):-
@@ -134,26 +96,35 @@ sentToAtom([SS | N] , [AS | AN]):-
     sentToAtom(N, AN).
 
 
-testSentences([], _) :- !.
-testSentences([Sent | Next], Pos):-
+testSentences([], _ , _) :- !.
+testSentences([Sent | Next], Pos, File):-
     sentToAtom(Sent, Atomz),
-    isSentence(Atomz),
-    %validMotion(Pos, Count, Dir,  NewPos),
+    %isSentence(Atomz),
+    sentence(Atomz, [], Dir, Count),
+    atom_number(Count,X),
+    validMotion(Pos, X, Dir, NewPos),
     write("Valid Move"), nl,
-    testSentences( Next, Pos ).
+    write(File, "Valid Move"),
+    write(File, '\n').
+    testSentences( Next, NewPos, File ).
     
-testSentences([Sent | Next], Pos):-
+testSentences([Sent | Next], Pos, File):-
     sentToAtom(Sent, Atomz),
     \+isSentence(Atomz),
     write("Not a valid sentence"), nl,
-    testSentences(Next, Pos).
+    write(File, "Not a valid sentence"),
+    write(File, '\n').
+    testSentences(Next, Pos, File).
     
-testSentences([Sent | Next], Pos):-
+testSentences([Sent | Next], Pos, File):-
     sentToAtom(Sent, Atomz),
-    isSentence(Atomz),
-    %\+validMotion(Pos, Count, Dir,  _),
+    sentence(Atomz, [], Dir, Count),
+    atom_number(Count,X),
+    \+validMotion(Pos, X, Dir, _),
     write("Not a valid move"), nl,
-    testSentences(Next, Pos).
+    write(File, "Not a valid Move"),
+    write(File, '\n').
+    testSentences(Next, Pos, File).
 
 
 
@@ -167,23 +138,23 @@ validMotion([X,Y], Count, left, OutPos ):-
     adj_square([X,Y], [X1, Y]),
     validMotion([X1,Y], DownCount, left, OutPos).
 
-validMotion([X,Y], Count, "right", OutPos):- 
+validMotion([X,Y], Count, right, OutPos):- 
     X1 is X + 1,
     DownCount is Count - 1,
     adj_square([X,Y], [X1, Y]),
-    validMotion([X1,Y], DownCount, "right", OutPos).
+    validMotion([X1,Y], DownCount, right, OutPos).
 
-validMotion([X,Y], Count, "down", OutPos):-
+validMotion([X,Y], Count, down, OutPos):-
     Y1 is Y + 1,
     DownCount is Count - 1,
     adj_square([X,Y], [X, Y1]),
-    validMotion([X,Y1], DownCount, "down", OutPos).
+    validMotion([X,Y1], DownCount, down, OutPos).
 
-validMotion([X,Y], Count, "up", OutPos):-
+validMotion([X,Y], Count, up, OutPos):-
     Y1 is Y - 1,
     DownCount is Count - 1,
     adj_square([X,Y], [X, Y1]),
-    validMotion([X,Y1], DownCount, "up", OutPos).
+    validMotion([X,Y1], DownCount, up, OutPos).
 
 
 
@@ -203,3 +174,18 @@ lines_to_words([], []).
 lines_to_words([H|T], [H2|T2]) :-
 	split_string(H, " ", "", H2),
 	lines_to_words(T, T2).
+	
+	
+adj_square([X0,Y0], [X0,Y1]) :- (Y1 is Y0-1), inside_board(X0,Y1), \+ wall(X0,Y1).
+adj_square([X0,Y0], [X0,Y1]) :- (Y1 is Y0+1), inside_board(X0,Y1), \+ wall(X0,Y1).
+adj_square([X0,Y0], [X1,Y0]) :- (X1 is X0-1), inside_board(X1,Y0), \+ wall(X1,Y0).
+adj_square([X0,Y0], [X1,Y0]) :- (X1 is X0+1), inside_board(X1,Y0), \+ wall(X1,Y0).
+
+
+/* Check if the square is within the board boundaries given info(width,height,c) */
+inside_board(W,H) :- 
+	info(Width,Height,_), 
+	W >= 0,
+	H >= 0, 
+	W < Width,
+	H < Height.
