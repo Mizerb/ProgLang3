@@ -24,26 +24,6 @@ verbPhrase([Verb | Body], Phrase2, _, '-1') :-
 
 %%%%%%%%%
 
-/* Sentence contains a subject and verb phrase */
-sentence(Phrase1, Phrase2) :-
-    subjectPhrase(Phrase1, Body), verbPhrase(Body, Phrase2).
-
-/* Subject Phrase is same for both structures */
-subjectPhrase([Subject | Phrase2], Phrase2) :- subject(Subject).
-subjectPhrase([Article, Subject | Phrase2], Phrase2) :- article(Article), subject(Subject).
-
-directionPhrase([Number, Subject, Direction | Phrase2], Phrase2) :- 
-    num(Number), subject(Subject), direction(Direction).
-
-/* Structure 1 */
-verbPhrase([Verb | Body], Phrase2) :-
-    verb(Verb), directionPhrase(Body, Phrase2).   
-    
-/* Structure 2 */
-verbPhrase([Verb | Body], Phrase2) :-
-    verb(Verb), subjectPhrase(Body, Phrase2).
-
-
 article(the).
 article(a).
 subject(rat).
@@ -82,9 +62,7 @@ main :-
     %Convert the lines in file to an list of sentences that are lists of words
     lines_to_words(Lines, Words),
     close(Str),
-    /*write(Words), nl,*/
     start(X,Y),
-    %inSent(Words).
     open("NL-parse-solution", write, File),
     testSentences(Words, [X,Y], File),
     close(File).
@@ -103,17 +81,17 @@ testSentences([Sent | Next], Pos, File):-
     sentence(Atomz, [], Dir, Count),
     atom_number(Count,X),
     validMotion(Pos, X, Dir, NewPos),
-    write("Valid Move"), nl,
+    %write("Valid Move"), nl,
     write(File, "Valid Move"),
-    write(File, '\n').
+    write(File, '\n'),
     testSentences( Next, NewPos, File ).
     
 testSentences([Sent | Next], Pos, File):-
     sentToAtom(Sent, Atomz),
-    \+isSentence(Atomz),
-    write("Not a valid sentence"), nl,
+    \+sentence(Atomz, [], _ , _),
+    %write("Not a valid sentence"), nl,
     write(File, "Not a valid sentence"),
-    write(File, '\n').
+    write(File, '\n'),
     testSentences(Next, Pos, File).
     
 testSentences([Sent | Next], Pos, File):-
@@ -121,9 +99,9 @@ testSentences([Sent | Next], Pos, File):-
     sentence(Atomz, [], Dir, Count),
     atom_number(Count,X),
     \+validMotion(Pos, X, Dir, _),
-    write("Not a valid move"), nl,
+    %write("Not a valid move"), nl,
     write(File, "Not a valid Move"),
-    write(File, '\n').
+    write(File, '\n'),
     testSentences(Next, Pos, File).
 
 
