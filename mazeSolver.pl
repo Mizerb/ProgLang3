@@ -3,13 +3,19 @@
 
 
 main :-
+	start(X,Y),
+	open("path-solution.txt", write, File),
+	write(File, [X,Y]),
+    write(File, '\n'),
+    close(File),
 	num_buttons(N),
-	myloop(N).
+	N1 is N + 1,
+	run(N1).
 
 
 path(A,B,Path) :-
        travel(A,B,[A],Q), 
-       reverse(Q,Path),
+       reverse(Q,[_ | Path]),
        write_list_to_file("path-solution.txt", Path).
 
 travel(A,B,P,[B|P]) :- 
@@ -20,15 +26,14 @@ travel(A,B,Visited,Path) :-
        \+member(C,Visited),
        travel(C,B,[C|Visited],Path).
 
+my_loop_from(N,N) :- !.
+my_loop_from(M,N) :- M < N, sGOAL(M,X,Y ) , eGOAL(M,X1,Y1),
+	path([X,Y],[X1,Y1], _),
+	%write_list_to_file("path-solution.txt", DaList),
+	M1 is M + 1,
+	my_loop_from(M1,N).
 
-natural(1).
-natural(N) :- natural(M), N is M+1.
-
-myloop(N) :- N > 0, natural(I), sGOAL(I,X,Y ) , eGOAL(I,X1,Y1),
-	path([X,Y],[X1,Y1], DaList),
-	write_list_to_file("path-solution.txt", DaList)
-	I = N, 
-	!, fail.
+run(N) :- my_loop_from(1, N).
 
 /* Did we get these from stack overflow? yes, yes we did */
 loop_through_list(File, List) :-
@@ -53,12 +58,11 @@ eGOAL(I, X, Y) :- button(X,Y, I).
  
 	
 
-/* Check if the two squares are adjacent */
+/* Check if the two squares are adjacent and inside board and not a wall */
 adj_square([X0,Y0], [X0,Y1]) :- (Y1 is Y0-1), inside_board(X0,Y1), \+ wall(X0,Y1).
 adj_square([X0,Y0], [X0,Y1]) :- (Y1 is Y0+1), inside_board(X0,Y1), \+ wall(X0,Y1).
 adj_square([X0,Y0], [X1,Y0]) :- (X1 is X0-1), inside_board(X1,Y0), \+ wall(X1,Y0).
 adj_square([X0,Y0], [X1,Y0]) :- (X1 is X0+1), inside_board(X1,Y0), \+ wall(X1,Y0).
-
 
 
 /* Check if the square is within the board boundaries given info(width,height,c) */
