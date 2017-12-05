@@ -9,7 +9,7 @@ main :-
     write(File, '\n'),
     close(File),
 	num_buttons(N),
-	N1 is N + 1,
+	N1 is N + 2,
 	run(N1).
 
 
@@ -31,6 +31,9 @@ my_loop_from(M,N) :- M < N, sGOAL(M,X,Y ) , eGOAL(M,X1,Y1),
 	path([X,Y],[X1,Y1], _),
 	%write_list_to_file("path-solution.txt", DaList),
 	M1 is M + 1,
+	%write( " I am At: "),
+	%write( M ),
+	%nl,
 	my_loop_from(M1,N).
 
 run(N) :- my_loop_from(1, N).
@@ -51,9 +54,9 @@ write_list_to_file(Filename,List) :-
 
 
 sGOAL(I, X, Y) :- I =:= 1, start(X,Y).
-sGOAL(I, X, Y) :- Z is I-1, button(X,Y, Z).
+sGOAL(I, X, Y) :- Z is I - 1, button(X,Y, Z).
 
-eGOAL(I, X, Y) :- goal(X, Y), num_buttons(I).
+eGOAL(I, X, Y) :- Z is I - 1, num_buttons(Z), goal(X, Y).
 eGOAL(I, X, Y) :- button(X,Y, I).
  
 	

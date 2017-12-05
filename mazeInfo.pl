@@ -15,6 +15,7 @@ wall(4,4).
 button(0,0,2).
 button(0,3,1).
 
+
 num_buttons(2).
 
 start(3,4).
