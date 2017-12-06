@@ -1,4 +1,4 @@
-:- module(mazeSolver, []).
+%:- module(mazeSolver, []).
 :- use_module(mazeInfo, [info/3, wall/2, button/3, num_buttons/1, start/2, goal/2]).
 
 
@@ -10,25 +10,24 @@ main :-
     close(File),
 	num_buttons(N),
 	N1 is N + 2,
-	run(N1).
+	run(N1),
+	!.
 
 
-path(A,B,Path) :-
-       travel(A,B,[A],Q), 
-       reverse(Q,[_ | Path]),
+pointToPoint(Start,End,Path) :-
+       moves(End,Start,[End], Path), 
        write_list_to_file("path-solution.txt", Path).
 
-travel(A,B,P,[B|P]) :- 
-       adj_square(A,B).
-travel(A,B,Visited,Path) :-
-       adj_square(A,C),           
-       C \== B,
-       \+member(C,Visited),
-       travel(C,B,[C|Visited],Path).
+moves(Step,Goal, BackPath, [Goal|BackPath]):-
+       adj_square(Step,Goal).
+moves(Current,Goal,Visited,Path) :-
+       adj_square(Current, Step),           
+       Step \== Goal, \+member(Step,Visited),
+       moves(Step,Goal,[Step|Visited],Path).
 
 my_loop_from(N,N) :- !.
 my_loop_from(M,N) :- M < N, sGOAL(M,X,Y ) , eGOAL(M,X1,Y1),
-	path([X,Y],[X1,Y1], _),
+	pointToPoint([X,Y],[X1,Y1], _),
 	%write_list_to_file("path-solution.txt", DaList),
 	M1 is M + 1,
 	%write( " I am At: "),
@@ -36,12 +35,13 @@ my_loop_from(M,N) :- M < N, sGOAL(M,X,Y ) , eGOAL(M,X1,Y1),
 	%nl,
 	my_loop_from(M1,N).
 
+/* loop through the number of buttons plus the goal */
 run(N) :- my_loop_from(1, N).
 
-/* Did we get these from stack overflow? yes, yes we did */
+/* write the moves in the list to file */
 loop_through_list(File, List) :-
-    member(Element, List),
-    write(File, Element),
+    member(Move, List),
+    write(File, Move),
     write(File, '\n'),
     fail.
 
